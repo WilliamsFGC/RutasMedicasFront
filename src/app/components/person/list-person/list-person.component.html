@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <table class="table table-sm">
+                <tr>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Tipo Documento</th>
+                    <th>No. Documento</th>
+                    <th></th>
+                </tr>
+                <tr *ngFor="let person of persons; let indexPerson = index">
+                    <td>{{ person.primerNombre + ' ' +  person.segundoNombre }}</td>
+                    <td>{{ person.primerApellido + ' ' + person.segundoApellido }}</td>
+                    <td>{{person.identidad?.tipoDocumento?.descripcion}}</td>
+                    <td>{{person.identidad?.numeroDocumento}}</td>
+                    <td>
+                        <a routerLink="/person/update" [state]="{ data: person }" class="btn btn-primary mr-2">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <button class="btn btn-danger" (click)="onDelete(person._id, indexPerson)">
+                            <i class="fa fa-remove"></i>
+                        </button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
