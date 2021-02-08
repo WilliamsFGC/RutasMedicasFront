@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  urlApiRutasMedicas: 'https://localhost:44367/api/'
+  urlApiRutasMedicas: 'http://localhost:53946/api/'
 };
 
 /*

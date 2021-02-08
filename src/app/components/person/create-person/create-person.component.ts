@@ -48,20 +48,21 @@ export class CreatePersonComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const regexDate = /^\d{4}[./-]\d{2}[./-]\d{2}$/;
     this.personForm = this.builder.group({
       _id: [null],
-      tipoDocumento: [{}, [Validators.required]],
+      tipoDocumento: [0, [Validators.required]],
       numeroDocumento: ['', [Validators.required, Validators.maxLength(20)]],
       primerNombre: ['', [Validators.required, Validators.maxLength(15)]],
       segundoNombre: ['', [Validators.maxLength(15)]],
       primerApellido: ['', [Validators.required, Validators.maxLength(15)]],
       segundoApellido: ['', [Validators.maxLength(15)]],
-      fechaNacimiento: ['', [Validators.required, Validators.maxLength(10)]],
+      fechaNacimiento: ['', [Validators.required, Validators.maxLength(10), Validators.pattern(regexDate)]],
       estadoCivil: ['', [Validators.required]],
-      sexo: [{ }, [Validators.required]],
+      sexo: [0, [Validators.required]],
       otroSexo: [''],
       identidad: this.builder.group({
-        fechaExpedicion: [null, [Validators.required, Validators.maxLength(10)]],
+        fechaExpedicion: [null, [Validators.required, Validators.maxLength(10), Validators.pattern(regexDate)]],
         lugarExpedicion: ['', [Validators.required, Validators.maxLength(30)]]
       })
     });
@@ -92,18 +93,18 @@ export class CreatePersonComponent implements OnInit {
         this.personForm.controls['segundoNombre'].setValue(person.segundoNombre);
         this.personForm.controls['primerApellido'].setValue(person.primerApellido);
         this.personForm.controls['segundoApellido'].setValue(person.segundoApellido);
-        this.personForm.controls['fechaNacimiento'].setValue(person.fechaNacimiento);
+        this.personForm.controls['fechaNacimiento'].setValue(this.utilities.GetDateStringYYYMMDD(person.fechaNacimiento));
         this.personForm.controls['estadoCivil'].setValue(person.estadoCivil);
         // this.personForm.controls['sexo'].setValue(itemSexo);
         this.personForm.controls['otroSexo'].setValue(person.sexo.otro);
         const identidadGroup = this.personForm.controls['identidad'] as FormGroup;
-        identidadGroup.controls['fechaExpedicion'].setValue(person.identidad.fechaExpedicion);
+        identidadGroup.controls['fechaExpedicion'].setValue(this.utilities.GetDateStringYYYMMDD(person.identidad.fechaExpedicion));
         identidadGroup.controls['lugarExpedicion'].setValue(person.identidad.lugarExpedicion);
 
         // asignar correos
         this.correosElectronicos = new Array<object>();
         for (let i = 0; i < person.correoElectronico.length; i++) {
-          this.correosElectronicos.push({ email: person.correoElectronico[i] });
+          this.correosElectronicos.push({ email: person.correoElectronico[i], valid: true });
         }
 
         // asignar eps
@@ -124,8 +125,7 @@ export class CreatePersonComponent implements OnInit {
         if (person === undefined) {
           return;
         }
-        const itemDocumentType = this.documentTypes.filter(f => f.codigo === person.tipoDocumento.codigo);
-        this.personForm.controls['tipoDocumento'].setValue(itemDocumentType);
+        this.personForm.controls['tipoDocumento'].setValue(person.tipoDocumento.codigo);
       }
     });
   }
@@ -134,20 +134,20 @@ export class CreatePersonComponent implements OnInit {
     this.personService.GetSexList().subscribe(res => {
       if (res.isSuccessful) {
         // Asignar valor de la lista de sexo
+        this.sexList = res.result;
         const person = history.state.data as PersonDto;
         if (person !== undefined) {
-          // this.personForm.controls['sexo'].setValue(person.sexo);
+          this.personForm.controls['sexo'].setValue(person.sexo._id);
         }
-        this.sexList = res.result;
       }
     });
   }
 
   onChangeSex() {
-    const sexItem = this.personForm.controls['sexo'].value as SexDto;
+    const sexItem = this.personForm.controls['sexo'].value as number;
     const controlOtroSexo = this.personForm.controls['otroSexo'];
     controlOtroSexo.clearValidators();
-    if (sexItem._id === this.otherSexId) {
+    if (sexItem === this.otherSexId) {
       controlOtroSexo.setValidators([Validators.required]);
     }
     controlOtroSexo.updateValueAndValidity();
@@ -175,10 +175,16 @@ export class CreatePersonComponent implements OnInit {
     }
     person.eps = this.eps;
     // Validar sexo
-    const sexItem = this.personForm.controls['sexo'].value as SexDto;
-    if (sexItem._id === this.otherSexId) {
-      sexItem.otro = this.personForm.controls['otroSexo'].value;
+    const sexItem = this.personForm.controls['sexo'].value as number;
+    const sexoSeleccionado = this.sexList.find(f => f._id === sexItem);
+    if (sexItem === this.otherSexId) {
+      sexoSeleccionado.otro = this.personForm.controls['otroSexo'].value;
     }
+    person.sexo = sexoSeleccionado;
+    // Obtener tipo documento
+    const tipoDocumento = this.personForm.controls['tipoDocumento'].value as number;
+    const tipoDocumentoSeleccionado = this.documentTypes.find(f => f.codigo === tipoDocumento);
+    person.tipoDocumento = tipoDocumentoSeleccionado;
     if (!this.isUpdate) {
       this.personService.SavePerson(person).subscribe(res => {
         if (res.isSuccessful) {

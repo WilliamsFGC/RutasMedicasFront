@@ -9,14 +9,14 @@
                 <div class="col-sm-12">
                     <span>Tipo de Documento<span class="text-danger">*</span></span>
                     <select formControlName="tipoDocumento" class="form-control">
-                        <option [ngValue]="{}">--seleccione--</option>
-                        <option *ngFor="let documentTypeItem of documentTypes" [ngValue]="documentTypeItem">
+                        <option [ngValue]="0">--seleccione--</option>
+                        <option *ngFor="let documentTypeItem of documentTypes" [ngValue]="documentTypeItem.codigo">
                             {{documentTypeItem.descripcion}}</option>
                     </select>
                 </div>
                 <div class="text-left text-danger">
-                    <span class="col-sm-12"
-                        *ngIf="!controls['tipoDocumento'].value?.descripcion && this.submited">Por favor seleccione
+                    <span class="col-sm-12" *ngIf="controls['tipoDocumento'].value === 0 && this.submited">Por favor
+                        seleccione
                         una opción</span>
                 </div>
             </div>
@@ -26,11 +26,11 @@
                     <input type="text" formControlName="numeroDocumento" class="form-control">
                 </div>
                 <div class="text-left text-danger">
-                    <span class="col-sm-12"
-                        *ngIf="controls['numeroDocumento'].errors?.maxlength && this.submited">El campo
+                    <span class="col-sm-12" *ngIf="controls['numeroDocumento'].errors?.maxlength && this.submited">El
+                        campo
                         excede el límite de caracteres</span>
-                    <span class="col-sm-12"
-                        *ngIf="controls['numeroDocumento'].errors?.required && this.submited">Por favor
+                    <span class="col-sm-12" *ngIf="controls['numeroDocumento'].errors?.required && this.submited">Por
+                        favor
                         diligencie el campo</span>
                 </div>
             </div>
@@ -81,13 +81,15 @@
             <div class="col-sm-12">
                 <div class="col-sm-12">
                     <span>Fecha Nacimiento <span class="text-danger">*</span></span>
-                    <input type="text" formControlName="fechaNacimiento" class="form-control">
+                    <input type="text" formControlName="fechaNacimiento" class="form-control" placeholder="yyyy-mm-dd">
                 </div>
                 <div class="text-left text-danger">
                     <span class="col-sm-12" *ngIf="controls['fechaNacimiento'].errors?.maxlength && this.submited">El
                         campo excede el límite de caracteres</span>
                     <span class="col-sm-12" *ngIf="controls['fechaNacimiento'].errors?.required && this.submited">Por
                         favor diligencie el campo</span>
+                    <span class="col-sm-12" *ngIf="controls['fechaNacimiento'].errors?.pattern && this.submited">El
+                        formato de la fecha no es valido</span>
                 </div>
             </div>
             <div class="col-sm-12">
@@ -113,16 +115,17 @@
                     <div class="col-sm-12">
                         <span>Sexo <span class="text-danger">*</span></span>
                         <select class="form-control" formControlName="sexo" (change)="onChangeSex()">
-                            <option [ngValue]="{ }" [value]="{ }">--seleccione--</option>
-                            <option *ngFor="let sexItem of sexList" [ngValue]="sexItem" >{{sexItem.descripcion}}</option>
+                            <option [ngValue]="0">--seleccione--</option>
+                            <option *ngFor="let sexItem of sexList" [ngValue]="sexItem._id">{{sexItem.descripcion}}
+                            </option>
                         </select>
                     </div>
                     <div class="text-left text-danger">
-                        <span class="col-sm-12" *ngIf="!controls['sexo'].value?._id && this.submited">Por favor
+                        <span class="col-sm-12" *ngIf="controls['sexo'].value === 0 && this.submited">Por favor
                             seleccione una opción</span>
                     </div>
                 </div>
-                <div class="col-sm-12" *ngIf="controls['sexo'].value?.id === otherSexId">
+                <div class="col-sm-12" *ngIf="controls['sexo'].value === otherSexId">
                     <div class="col-sm-12">
                         <span>Otro<span class="text-danger">*</span></span>
                         <input type="text" formControlName="otroSexo" class="form-control" />
@@ -138,7 +141,8 @@
                 <div class="col-sm-12">
                     <div class="col-sm-12">
                         <span>Fecha Expedición<span class="text-danger">*</span></span>
-                        <input type="text" formControlName="fechaExpedicion" class="form-control">
+                        <input type="text" formControlName="fechaExpedicion" class="form-control"
+                            placeholder="yyyy-mm-dd">
                     </div>
                     <div class="text-left text-danger">
                         <span class="col-sm-12"
@@ -147,6 +151,8 @@
                         <span class="col-sm-12"
                             *ngIf="controlsIdentidad['fechaExpedicion'].errors?.required && this.submited">Por favor
                             diligencie el campo</span>
+                        <span class="col-sm-12" *ngIf="controlsIdentidad['fechaExpedicion'].errors?.pattern && this.submited">El
+                            formato de la fecha no es valido</span>
                     </div>
                 </div>
                 <div class="col-sm-12">
@@ -183,8 +189,8 @@
             <!-- Eps -->
             <div class="col-sm-12 mt-2">
                 <div class="col-sm-12 text-right mb-2">
-                    <button class="fa fa-plus-circle fa-2x btn btn-primary" (click)="onAddingEps()"
-                        title="Agregar Eps" type="button"></button>
+                    <button class="fa fa-plus-circle fa-2x btn btn-primary" (click)="onAddingEps()" title="Agregar Eps"
+                        type="button"></button>
                 </div>
                 <div class="col-sm-12">
                     <table class="table table-sm ">
@@ -199,16 +205,16 @@
                             <td>{{utilities.GetDateStringYYYMMDD(epsItem.fechaIngreso)}}</td>
                             <td>{{ (epsItem.estadoAfiliacion) ? 'Activo' : 'Inactivo' }}</td>
                             <td>
-                                <i class="fa fa-star btn" [ngClass]="{ 'text-warning': epsItem.estadoAfiliacion, 'text-black': !epsItem.estadoAfiliacion }" 
-                                (click)="MarkAsActive(epsItem)"
-                                title="Marcar como activa"></i>
+                                <i class="fa fa-star btn"
+                                    [ngClass]="{ 'text-warning': epsItem.estadoAfiliacion, 'text-black': !epsItem.estadoAfiliacion }"
+                                    (click)="MarkAsActive(epsItem)" title="Marcar como activa"></i>
                             </td>
                         </tr>
                     </table>
                 </div>
             </div>
             <!-- Guardar -->
-            <div class="col-sm-12 text-right mt-4">
+            <div class="col-sm-12 text-right mt-4 mb-4">
                 <button class="btn btn-primary" type="submit">Guardar</button>
             </div>
         </form>
