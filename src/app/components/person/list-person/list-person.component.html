@@ -12,8 +12,8 @@
                 <tr *ngFor="let person of persons; let indexPerson = index">
                     <td>{{ person.primerNombre + ' ' +  person.segundoNombre }}</td>
                     <td>{{ person.primerApellido + ' ' + person.segundoApellido }}</td>
-                    <td>{{person.identidad?.tipoDocumento?.descripcion}}</td>
-                    <td>{{person.identidad?.numeroDocumento}}</td>
+                    <td>{{person.tipoDocumento?.descripcion}}</td>
+                    <td>{{person.numeroDocumento}}</td>
                     <td>
                         <a routerLink="/person/update" [state]="{ data: person }" class="btn btn-primary mr-2">
                             <i class="fa fa-edit"></i>

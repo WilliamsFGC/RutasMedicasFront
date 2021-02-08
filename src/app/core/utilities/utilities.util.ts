@@ -1,7 +1,12 @@
 export class UtilitiesUtil {
     GetDateStringYYYMMDD(date: Date) {
         if (typeof date === 'string') {
-            return date;
+            try {
+                date = new Date(date);   
+            } catch (error) {
+                console.error(error);
+                return date;
+            }
         }
         let dateString = '';
         const day = date.getDate();

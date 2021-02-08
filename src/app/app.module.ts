@@ -9,6 +9,8 @@ import { AppRoutingModule } from './routing/app-routing/app-routing.module';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpFilterInterceptor } from './core/interceptors/http-filter.interceptor';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 
 @NgModule({
   declarations: [
@@ -22,7 +24,8 @@ import { HttpFilterInterceptor } from './core/interceptors/http-filter.intercept
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    BrowserAnimationsModule
   ],
   providers: [
     {

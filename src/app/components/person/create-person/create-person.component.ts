@@ -20,7 +20,7 @@ export class CreatePersonComponent implements OnInit {
   title: string = '';
   personForm: FormGroup;
   documentTypes: DocumentTypeDto[] = new Array<DocumentTypeDto>();
-  correosElectronicos = new Array<object>({ email: "" }, { email: "" }, { email: "" });
+  correosElectronicos = new Array<object>({ email: "", valid: true }, { email: "", valid: true }, { email: "", valid: true });
   eps = new Array<EpsPersonDto>();
   sexList = new Array<SexDto>();
   otherSexId: number = 3;
@@ -50,17 +50,17 @@ export class CreatePersonComponent implements OnInit {
   ngOnInit(): void {
     this.personForm = this.builder.group({
       _id: [null],
+      tipoDocumento: [{}, [Validators.required]],
+      numeroDocumento: ['', [Validators.required, Validators.maxLength(20)]],
       primerNombre: ['', [Validators.required, Validators.maxLength(15)]],
       segundoNombre: ['', [Validators.maxLength(15)]],
       primerApellido: ['', [Validators.required, Validators.maxLength(15)]],
       segundoApellido: ['', [Validators.maxLength(15)]],
-      fechaNacimiento: ['', [Validators.required]],
+      fechaNacimiento: ['', [Validators.required, Validators.maxLength(10)]],
       estadoCivil: ['', [Validators.required]],
-      sexo: [{}, [Validators.required]],
+      sexo: [{ }, [Validators.required]],
       otroSexo: [''],
       identidad: this.builder.group({
-        tipoDocumento: [{}, [Validators.required]],
-        numeroDocumento: ['', [Validators.required, Validators.maxLength(20)]],
         fechaExpedicion: [null, [Validators.required, Validators.maxLength(10)]],
         lugarExpedicion: ['', [Validators.required, Validators.maxLength(30)]]
       })
@@ -76,7 +76,7 @@ export class CreatePersonComponent implements OnInit {
     // Verificar el origen
     this.current.url.subscribe(res => {
       this.isUpdate = res[0]?.path == 'update';
-      this.title = (this.isUpdate) ? 'Actualizar persona' : 'Agregar persona';
+      this.title = (this.isUpdate) ? 'Actualizar paciente' : 'Agregar paciente';
       if (this.isUpdate) {
         const data = history.state.data;
         if (data === undefined) {
@@ -87,17 +87,16 @@ export class CreatePersonComponent implements OnInit {
         person['otroSexo'] = person.sexo.otro;
         // Agregar valores al formulario
         this.personForm.controls['_id'].setValue(person._id);
+        this.personForm.controls['numeroDocumento'].setValue(person.numeroDocumento);
         this.personForm.controls['primerNombre'].setValue(person.primerNombre);
         this.personForm.controls['segundoNombre'].setValue(person.segundoNombre);
         this.personForm.controls['primerApellido'].setValue(person.primerApellido);
         this.personForm.controls['segundoApellido'].setValue(person.segundoApellido);
         this.personForm.controls['fechaNacimiento'].setValue(person.fechaNacimiento);
         this.personForm.controls['estadoCivil'].setValue(person.estadoCivil);
-        this.personForm.controls['sexo'].setValue(person.sexo);
+        // this.personForm.controls['sexo'].setValue(itemSexo);
         this.personForm.controls['otroSexo'].setValue(person.sexo.otro);
         const identidadGroup = this.personForm.controls['identidad'] as FormGroup;
-        identidadGroup.controls['tipoDocumento'].setValue(person.identidad.tipoDocumento);
-        identidadGroup.controls['numeroDocumento'].setValue(person.identidad.numeroDocumento);
         identidadGroup.controls['fechaExpedicion'].setValue(person.identidad.fechaExpedicion);
         identidadGroup.controls['lugarExpedicion'].setValue(person.identidad.lugarExpedicion);
 
@@ -120,6 +119,13 @@ export class CreatePersonComponent implements OnInit {
     this.documentTypeService.GetDocumentTypes().subscribe(res => {
       if (res.isSuccessful) {
         this.documentTypes = res.result;
+        // Asignar valor de la lista de tipos de documento
+        const person = history.state.data as PersonDto;
+        if (person === undefined) {
+          return;
+        }
+        const itemDocumentType = this.documentTypes.filter(f => f.codigo === person.tipoDocumento.codigo);
+        this.personForm.controls['tipoDocumento'].setValue(itemDocumentType);
       }
     });
   }
@@ -127,6 +133,11 @@ export class CreatePersonComponent implements OnInit {
   GetSexList() {
     this.personService.GetSexList().subscribe(res => {
       if (res.isSuccessful) {
+        // Asignar valor de la lista de sexo
+        const person = history.state.data as PersonDto;
+        if (person !== undefined) {
+          // this.personForm.controls['sexo'].setValue(person.sexo);
+        }
         this.sexList = res.result;
       }
     });
@@ -136,7 +147,7 @@ export class CreatePersonComponent implements OnInit {
     const sexItem = this.personForm.controls['sexo'].value as SexDto;
     const controlOtroSexo = this.personForm.controls['otroSexo'];
     controlOtroSexo.clearValidators();
-    if (sexItem.id === this.otherSexId) {
+    if (sexItem._id === this.otherSexId) {
       controlOtroSexo.setValidators([Validators.required]);
     }
     controlOtroSexo.updateValueAndValidity();
@@ -149,15 +160,23 @@ export class CreatePersonComponent implements OnInit {
     }
 
     const person = this.personForm.value as PersonDto;
-    // Asignar correos
+    // Asignar y validar correos
     person.correoElectronico = new Array<string>();
+    let validEmails = true;
     for (let i = 0; i < this.correosElectronicos.length; i++) {
+      const email = this.correosElectronicos[i]['email'];
+      const valid = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(email) || email === '';
+      this.correosElectronicos[i]['valid'] = valid;
       person.correoElectronico.push(this.correosElectronicos[i]['email']);
+      validEmails = validEmails && valid;
+    }
+    if (!validEmails) {
+      return;
     }
     person.eps = this.eps;
     // Validar sexo
     const sexItem = this.personForm.controls['sexo'].value as SexDto;
-    if (sexItem.id === this.otherSexId) {
+    if (sexItem._id === this.otherSexId) {
       sexItem.otro = this.personForm.controls['otroSexo'].value;
     }
     if (!this.isUpdate) {
@@ -177,7 +196,8 @@ export class CreatePersonComponent implements OnInit {
 
   // Dialogo
   SearchEps() {
-    this.epsService.GetEps().subscribe(res => {
+    const entidad = this.searchEps.controls['entidad'].value;
+    this.epsService.GetEps(entidad).subscribe(res => {
       if (res.isSuccessful) {
         this.epsFinded = res.result;
       }
@@ -217,20 +237,36 @@ export class CreatePersonComponent implements OnInit {
     this.ShowDialog('addEps');
   }
 
+  MarkAsActive(epsItem: EpsPersonDto){
+    for(let eps of this.eps){
+      eps.estadoAfiliacion = eps.idEntidad === epsItem.idEntidad;
+    }
+  }
+
+  ClearModal() {
+    this.searchEps.controls['entidad'].setValue(null);
+    this.epsFinded = new Array<EpsDto>();
+  }
+
   SelectEpsItem(epsItem: EpsDto) {
+    if (this.eps.find(f => f.idEntidad === epsItem._id) !== undefined) {
+      this.sweet.ShowInfo('Eps', 'Esta eps ya se le ha asignado previamente');
+      return;
+    }
     this.sweet.ShowConfirm('Agregar Eps', `¿Desea agregar ${epsItem.entidad} a la lista de Eps?`, () => {
       if (this.eps.length === 0) {
         const epsPerson = new EpsPersonDto(epsItem._id, epsItem.entidad, new Date(Date.now()), true);
         this.eps.push(epsPerson);
       } else {
-        const epsPerson = new EpsPersonDto(epsItem._id, epsItem.entidad, new Date(Date.now()), true);
-        this.eps.push(epsPerson);
-        this.sweet.ShowInfo('Afiliación Eps', 'Se ha marcado la nueva eps como activa.');
         // Marcar las anteriores Eps como inactivas
         for (let i = 0; i < this.eps.length; i++) {
           this.eps[i].estadoAfiliacion = false;
         }
+        const epsPerson = new EpsPersonDto(epsItem._id, epsItem.entidad, new Date(Date.now()), true);
+        this.eps.push(epsPerson);
+        this.sweet.ShowInfo('Afiliación Eps', 'Se ha marcado la nueva eps como activa.');
       }
+      this.ClearModal();
       this.HideDialog();
     });
   }

@@ -30,7 +30,7 @@ export class ListPersonComponent implements OnInit {
       this.personService.DeletePerson(id).subscribe(res => {
         if (res.isSuccessful) {
           this.sweet.ShowSuccess('Eliminar', res.message);
-          this.persons = this.persons.splice(index, 1);
+          this.persons.splice(index, 1);
         }
       });
     });

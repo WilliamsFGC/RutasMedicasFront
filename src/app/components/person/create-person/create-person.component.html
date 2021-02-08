@@ -1,11 +1,40 @@
 <div class="container">
     <div class="row">
         <form [formGroup]="personForm" class="col-sm-12" (ngSubmit)="onSubmit()">
+            <div class="col-sm-12 text-center">
+                <input type="hidden" formControlName="_id" class="form-control" />
+                <h4>{{title}}</h4>
+            </div>
             <div class="col-sm-12">
-                <div class="col-sm-12 text-center">
-                    <input type="hidden" formControlName="_id" class="form-control" />
-                    <h4>{{title}}</h4>
+                <div class="col-sm-12">
+                    <span>Tipo de Documento<span class="text-danger">*</span></span>
+                    <select formControlName="tipoDocumento" class="form-control">
+                        <option [ngValue]="{}">--seleccione--</option>
+                        <option *ngFor="let documentTypeItem of documentTypes" [ngValue]="documentTypeItem">
+                            {{documentTypeItem.descripcion}}</option>
+                    </select>
                 </div>
+                <div class="text-left text-danger">
+                    <span class="col-sm-12"
+                        *ngIf="!controls['tipoDocumento'].value?.descripcion && this.submited">Por favor seleccione
+                        una opción</span>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="col-sm-12">
+                    <span>Número Documento<span class="text-danger">*</span></span>
+                    <input type="text" formControlName="numeroDocumento" class="form-control">
+                </div>
+                <div class="text-left text-danger">
+                    <span class="col-sm-12"
+                        *ngIf="controls['numeroDocumento'].errors?.maxlength && this.submited">El campo
+                        excede el límite de caracteres</span>
+                    <span class="col-sm-12"
+                        *ngIf="controls['numeroDocumento'].errors?.required && this.submited">Por favor
+                        diligencie el campo</span>
+                </div>
+            </div>
+            <div class="col-sm-12">
                 <div class="col-sm-12">
                     <span>Primer Nombre <span class="text-danger">*</span></span>
                     <input type="text" formControlName="primerNombre" class="form-control" />
@@ -84,12 +113,12 @@
                     <div class="col-sm-12">
                         <span>Sexo <span class="text-danger">*</span></span>
                         <select class="form-control" formControlName="sexo" (change)="onChangeSex()">
-                            <option [ngValue]="{}">--seleccione--</option>
-                            <option *ngFor="let sexItem of sexList" [ngValue]="sexItem">{{sexItem.descripcion}}</option>
+                            <option [ngValue]="{ }" [value]="{ }">--seleccione--</option>
+                            <option *ngFor="let sexItem of sexList" [ngValue]="sexItem" >{{sexItem.descripcion}}</option>
                         </select>
                     </div>
                     <div class="text-left text-danger">
-                        <span class="col-sm-12" *ngIf="!controls['sexo'].value?.id && this.submited">Por favor
+                        <span class="col-sm-12" *ngIf="!controls['sexo'].value?._id && this.submited">Por favor
                             seleccione una opción</span>
                     </div>
                 </div>
@@ -106,35 +135,6 @@
             </div>
             <!-- Identidad -->
             <div class="col-sm-12 pl-0" formGroupName="identidad">
-                <div class="col-sm-12">
-                    <div class="col-sm-12">
-                        <span>Tipo de Documento<span class="text-danger">*</span></span>
-                        <select formControlName="tipoDocumento" class="form-control">
-                            <option [ngValue]="{}">--seleccione--</option>
-                            <option *ngFor="let documentTypeItem of documentTypes" [ngValue]="documentTypeItem">
-                                {{documentTypeItem.descripcion}}</option>
-                        </select>
-                    </div>
-                    <div class="text-left text-danger">
-                        <span class="col-sm-12"
-                            *ngIf="!controlsIdentidad['tipoDocumento'].value?.descripcion && this.submited">Por favor seleccione
-                            una opción</span>
-                    </div>
-                </div>
-                <div class="col-sm-12">
-                    <div class="col-sm-12">
-                        <span>Número Documento<span class="text-danger">*</span></span>
-                        <input type="text" formControlName="numeroDocumento" class="form-control">
-                    </div>
-                    <div class="text-left text-danger">
-                        <span class="col-sm-12"
-                            *ngIf="controlsIdentidad['numeroDocumento'].errors?.maxlength && this.submited">El campo
-                            excede el límite de caracteres</span>
-                        <span class="col-sm-12"
-                            *ngIf="controlsIdentidad['numeroDocumento'].errors?.required && this.submited">Por favor
-                            diligencie el campo</span>
-                    </div>
-                </div>
                 <div class="col-sm-12">
                     <div class="col-sm-12">
                         <span>Fecha Expedición<span class="text-danger">*</span></span>
@@ -167,9 +167,14 @@
             <!-- Correo electrónico -->
             <div class="col-sm-12">
                 <div class="col-sm-12" *ngFor="let correoElectronico of correosElectronicos; let indexCorreo = index">
-                    <span>Correo #{{(indexCorreo + 1)}}</span>
-                    <input type="text" [value]="correoElectronico" [(ngModel)]="correoElectronico.email"
-                        [ngModelOptions]="{standalone: true}" class="form-control" />
+                    <div class="col-sm-12 pl-0">
+                        <span>Correo #{{(indexCorreo + 1)}}</span>
+                        <input type="text" [value]="correoElectronico" [(ngModel)]="correoElectronico.email"
+                            [ngModelOptions]="{standalone: true}" class="form-control" />
+                    </div>
+                    <div class="col-sm-12 text-danger">
+                        <span *ngIf="!correoElectronico.valid">Correo inválido</span>
+                    </div>
                 </div>
                 <div class="col-sm-12 text-danger" *ngIf="!existsEmail">
                     <span>Por favor agregar mínimo un correo electrónico</span>
@@ -182,16 +187,22 @@
                         title="Agregar Eps" type="button"></button>
                 </div>
                 <div class="col-sm-12">
-                    <table class="table table-sm">
+                    <table class="table table-sm ">
                         <tr>
                             <th>Entidad</th>
                             <th>Fecha Ingreso</th>
                             <th>Estado Afiliación</th>
+                            <th></th>
                         </tr>
                         <tr *ngFor="let epsItem of eps">
-                            <th>{{epsItem.entidad}}</th>
-                            <th>{{utilities.GetDateStringYYYMMDD(epsItem.fechaIngreso)}}</th>
-                            <th>{{ (epsItem.estadoAfiliacion) ? 'Activo' : 'Inactivo' }}</th>
+                            <td>{{epsItem.entidad}}</td>
+                            <td>{{utilities.GetDateStringYYYMMDD(epsItem.fechaIngreso)}}</td>
+                            <td>{{ (epsItem.estadoAfiliacion) ? 'Activo' : 'Inactivo' }}</td>
+                            <td>
+                                <i class="fa fa-star btn" [ngClass]="{ 'text-warning': epsItem.estadoAfiliacion, 'text-black': !epsItem.estadoAfiliacion }" 
+                                (click)="MarkAsActive(epsItem)"
+                                title="Marcar como activa"></i>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -220,7 +231,7 @@
                                     <i class="fa fa-search"></i>
                                 </button>
                             </div>
-                            <input type="text" placeholder="Nombre eps" class="form-control">
+                            <input type="text" placeholder="Nombre eps" formControlName="entidad" class="form-control">
                         </div>
                     </div>
                     <div class="col-sm-12" style="height: 400px; overflow: auto;">

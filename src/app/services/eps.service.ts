@@ -13,8 +13,8 @@ export class EpsService {
   controller = `${environment.urlApiRutasMedicas}Eps/`;
   constructor(private http: HttpClient) { }
 
-  GetEps(): Observable<GenericResponse<EpsDto[]>> {
-      const url = `${this.controller}GetEps`;
+  GetEps(entidad: string): Observable<GenericResponse<EpsDto[]>> {
+      const url = `${this.controller}GetEps/${entidad}`;
       return this.http.get<GenericResponse<EpsDto[]>>(url);
   }
 

@@ -6,6 +6,8 @@ export class PersonDto {
     correoElectronico: string[];
     eps: EpsPersonDto[];
     codigoInterno: string;
+    numeroDocumento: string;
+    tipoDocumento: DocumentTypeDto;
     primerNombre: string;
     segundoNombre: string;
     primerApellido: string;
@@ -17,12 +19,13 @@ export class PersonDto {
 }
 
 export class SexDto {
-    id: number;
+    _id: number;
     descripcion: string;
     otro: string;
     constructor(id?: number, descripcion?: string) {
-        this.id = id;
+        this._id = id;
         this.descripcion = descripcion;
+        this.otro = null;
     }
 }
 
@@ -31,8 +34,6 @@ export class PersonSearchDto {
 }
 
 export class PersonIdentity {
-    numeroDocumento: string;
     fechaExpedicion: Date;
     lugarExpedicion: string;
-    tipoDocumento: DocumentTypeDto;
 }
